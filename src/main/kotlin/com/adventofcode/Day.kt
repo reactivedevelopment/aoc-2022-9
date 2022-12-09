@@ -105,7 +105,6 @@ object Game {
   }
 }
 
-
 fun process(line: String) {
   val (direction, count) = line.split(" ")
   repeat(count.toInt()) {
