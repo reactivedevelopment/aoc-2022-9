@@ -12,14 +12,6 @@ data class Point(val x: Int, val y: Int) {
 
   fun down() = copy(y = y - 1)
 
-  private fun upRight() = right().up()
-
-  private fun upLeft() = left().up()
-
-  private fun downRight() = right().down()
-
-  private fun downLeft() = left().down()
-
   fun crosswalk() = setOf(
     left(),
     right(),
@@ -28,10 +20,10 @@ data class Point(val x: Int, val y: Int) {
   )
 
   fun diagonals() = setOf(
-    upRight(),
-    upLeft(),
-    downRight(),
-    downLeft(),
+    right().up(),
+    left().up(),
+    right().down(),
+    left().down()
   )
 
   fun onSameVerticalOrHorizontal(other: Point): Boolean {
