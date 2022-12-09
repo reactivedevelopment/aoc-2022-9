@@ -1,7 +1,5 @@
 package com.adventofcode
 
-import com.adventofcode.Game.pointsVisitedByTail
-import com.adventofcode.Game.step
 import java.awt.geom.Point2D.distance
 
 data class Point(val x: Int, val y: Int) {
@@ -62,64 +60,82 @@ fun Set<Point>.nearestTo(p: Point): Point {
   }
 }
 
-object Game {
+interface Link {
+  val point: Point
+}
 
-  private val pointsVisitedByTail = mutableSetOf(Point(0, 0))
+class Head : Link {
+  override var point = Point(0, 0); private set
 
-  private var head = Point(0, 0)
-
-  private var tail = Point(0, 0)
-    set(value) {
-      field = value
-      pointsVisitedByTail.add(value)
-    }
-
-  private fun tailStep() {
-    if (tail.isTouching(head)) {
-      return
-    }
-    if (tail.onSameVerticalOrHorizontal(head)) {
-      tail = tail.crosswalk().nearestTo(head)
-      return
-    }
-    tail = tail.diagonals().nearestTo(head)
-  }
-
-  private fun headStep(direction: String) {
-    head = when (direction) {
-      "L" -> head.left()
-      "R" -> head.right()
-      "U" -> head.up()
-      "D" -> head.down()
+  fun step(direction: String) {
+    point = when (direction) {
+      "L" -> point.left()
+      "R" -> point.right()
+      "U" -> point.up()
+      "D" -> point.down()
       else -> error("Unknown direction $direction")
     }
   }
+}
 
-  fun step(direction: String) {
-    headStep(direction)
-    tailStep()
-  }
+class Tail(private val head: Link) : Link {
 
-  fun pointsVisitedByTail(): Int {
-    return pointsVisitedByTail.size
+  val visited = mutableSetOf(Point(0, 0))
+
+  override var point = Point(0, 0)
+    private set(value) {
+      field = value
+      visited += value
+    }
+
+  fun step() {
+    if (point.isTouching(head.point)) {
+      return
+    }
+    if (point.onSameVerticalOrHorizontal(head.point)) {
+      point = point.crosswalk().nearestTo(head.point)
+      return
+    }
+    point = point.diagonals().nearestTo(head.point)
   }
 }
 
-fun process(line: String) {
-  val (direction, count) = line.split(" ")
-  repeat(count.toInt()) {
-    step(direction)
-  }
-}
+class Game(len: Int) {
+  private val head = Head()
+  private val tails = mutableListOf<Tail>()
 
-fun solution(): Int {
-  return pointsVisitedByTail()
+  init {
+    tails.add(Tail(head))
+    // потому что один элемент это голова, а второй мы добавили перед циклом
+    repeat(len - 2) {
+      val prev = tails.last()
+      val tail = Tail(prev)
+      tails.add(tail)
+    }
+  }
+
+  private fun step(direction: String) {
+    head.step(direction)
+    tails.forEach(Tail::step)
+  }
+
+  fun process(command: String) {
+    val (direction, count) = command.split(" ")
+    repeat(count.toInt()) {
+      step(direction)
+    }
+  }
+
+  fun solution(): Int {
+    return tails.last().visited.size
+  }
 }
 
 fun main() {
+  val game = Game(10)
   ::main.javaClass
     .getResourceAsStream("/input")!!
     .bufferedReader()
-    .forEachLine(::process)
-  println(solution())
+    .forEachLine(game::process)
+  println(game.solution())
 }
