@@ -7,7 +7,6 @@ plugins {
   id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 dependencies {
-
 }
 tasks.jar {
   isZip64 = true
